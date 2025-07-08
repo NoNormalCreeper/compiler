@@ -1,0 +1,3 @@
+[submodule "modules/midend"]
+	path = modules/midend
+	url = https://github.com/BUPT-a-out/midend.git
