@@ -57,7 +57,7 @@ int main() {
     auto* finalSum = builder.createLoad(sumAlloca, "final_sum");
     builder.createRet(finalSum);
     
-    std::cout << midend::IRPrinter::toString(func) << std::endl;
+    std::cout << midend::IRPrinter::toString(module.get()) << std::endl;
     
     return 0;
 }
