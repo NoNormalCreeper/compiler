@@ -22,7 +22,7 @@ compiler/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/BUPT-a-out/compiler.gi
+   git clone https://github.com/BUPT-a-out/compiler.git
    cd compiler
    ```
 

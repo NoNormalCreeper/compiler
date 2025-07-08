@@ -1,3 +1,6 @@
 [submodule "modules/midend"]
 	path = modules/midend
 	url = https://github.com/BUPT-a-out/midend.git
+[submodule "modules/backend"]
+	path = modules/backend
+	url = https://github.com/BUPT-a-out/backend.git
