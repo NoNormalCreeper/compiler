@@ -14,5 +14,5 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 add_subdirectory(modules/midend)
-add_subdirectory(modules/backend)
+add_subdirectory(modules/riscv64)
 add_subdirectory(src)
