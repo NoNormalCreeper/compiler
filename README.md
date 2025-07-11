@@ -5,14 +5,10 @@
 
 ```
 compiler/
-├── CMakeLists.txt         # Root CMake configuration
 ├── modules/
+│   ├── riscv64/           # RISC-V backend (submodule)
 │   └── midend/            # Middle-end IR library (submodule)
-│       ├── include/IR/    # IR headers (Module, Function, BasicBlock, etc.)
-│       ├── src/IR/        # IR implementation
-│       └── tests/         # Unit tests for IR components
 └── src/
-    ├── CMakeLists.txt     # Source CMake configuration
     └── main.cpp           # Main compiler entry point
 ```
 
@@ -33,22 +29,14 @@ compiler/
 
 ### Building
 
-1. **Configure with CMake**:
-   ```bash
-   cmake -B build
-   ```
-
-3. **Build the project**:
-   ```bash
-   cmake --build build -j8
-   ```
+```bash
+xmake
+```
 
 ### Running
 
-After building, run the compiler:
-
 ```bash
-./build/src/compiler
+xmake run
 ```
 
 This will execute the example in `main.cpp` which demonstrates:
