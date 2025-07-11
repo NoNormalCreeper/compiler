@@ -1,5 +1,5 @@
-set_project("MyCompiler")
-set_version("1.0.0")
+set_project("Compiler")
+set_version("0.1.0")
 
 set_xmakever("2.8.0")
 
@@ -73,7 +73,7 @@ task("update-submodules")
         local projectdir = project.directory()
         os.cd(projectdir)
         
-        cprint("${color.info}Updating submodules to latest commits...")
+        cprint("${bright blue}Updating submodules to latest commits...")
         
         local submodules = {
             {path = "modules/midend", branch = "main"},
@@ -81,7 +81,7 @@ task("update-submodules")
         }
         
         for _, submodule in ipairs(submodules) do
-            cprint("${color.info}Updating %s...", submodule.path)
+            cprint("${bright yellow}Updating %s...", submodule.path)
             os.cd(path.join(projectdir, submodule.path))
             os.exec("git checkout %s", submodule.branch)
             os.exec("git pull origin %s", submodule.branch)
