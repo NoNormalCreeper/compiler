@@ -2,3 +2,5 @@
 build/
 !.gitignore
 !.gitmodules
+!.vscode/
+compile_commands.json
