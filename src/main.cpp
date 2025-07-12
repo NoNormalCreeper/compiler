@@ -15,7 +15,8 @@ int main() {
     auto* int32Ty = ctx->getInt32Type();
     auto* int32PtrTy = midend::PointerType::get(int32Ty);
     auto* funcType = midend::FunctionType::get(int32Ty, {int32PtrTy, int32Ty});
-    auto* func = midend::Function::Create(funcType, "sum_array", module.get());
+    auto* func = midend::Function::Create(funcType, "sum_array",
+                                          {"array", "size"}, module.get());
 
     auto* entryBB = midend::BasicBlock::Create(ctx.get(), "entry", func);
     auto* loopCondBB = midend::BasicBlock::Create(ctx.get(), "loop_cond", func);
