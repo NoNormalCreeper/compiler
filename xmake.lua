@@ -142,7 +142,7 @@ task("format")
             raise("clang-format-15 or clang-format is required for formatting")
         end
         
-        local cmd = "find . -name '*.cpp' -o -name '*.h' | grep -v build | grep -v googletest | grep -v _deps | xargs " .. clang_format.program
+        local cmd = "find . -name '*.cpp' -o -name '*.h' | grep -v build | grep -v googletest | grep -v modules | grep -v _deps | xargs " .. clang_format.program
         if option.get("check") then
             cmd = cmd .. " --dry-run --Werror"
         else
