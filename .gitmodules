@@ -4,3 +4,6 @@
 [submodule "modules/riscv64"]
 	path = modules/riscv64
 	url = https://github.com/BUPT-a-out/backend.git
+[submodule "modules/frontend"]
+	path = modules/frontend
+	url = https://github.com/BUPT-a-out/frontend.git
