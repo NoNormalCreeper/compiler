@@ -23,34 +23,9 @@ set_policy("build.warning", true)
 
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "."})
 
-before_build(function()
-    import("core.project.project")
-    
-    local submodules = {
-        "modules/midend",
-        "modules/riscv64"
-    }
-    
-    local needs_init = false
-    for _, submodule in ipairs(submodules) do
-        local submodule_path = path.join(os.projectdir(), submodule)
-        if not os.isdir(submodule_path) or #os.dirs(path.join(submodule_path, "*")) == 0 then
-            needs_init = true
-            break
-        end
-    end
-    
-    if needs_init then
-        cprint("${color.info}Initializing git submodules...")
-        local ok = os.exec("git submodule update --init --recursive")
-        if ok ~= 0 then
-            error("Failed to initialize git submodules")
-        end
-    end
-end)
-
 includes("modules/midend/xmake.lua")
 includes("modules/riscv64/xmake.lua")
+includes("modules/frontend/xmake.lua")
 
 target("compiler")
     set_kind("binary")
@@ -74,10 +49,13 @@ task("update-submodules")
         os.cd(projectdir)
         
         cprint("${bright blue}Updating submodules to latest commits...")
+
+        os.exec("git submodule update --init --recursive")
         
         local submodules = {
             {path = "modules/midend", branch = "main"},
-            {path = "modules/riscv64", branch = "master"}
+            {path = "modules/riscv64", branch = "master"},
+            {path = "modules/frontend", branch = "main"}
         }
         
         for _, submodule in ipairs(submodules) do
