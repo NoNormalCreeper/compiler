@@ -6,7 +6,8 @@
         "*.hpp": "cpp",
         "*.cpp": "cpp",
         "*.cc": "cpp",
-        "*.cxx": "cpp"
+        "*.cxx": "cpp",
+        "*.sy": "c"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cpptools",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
