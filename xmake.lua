@@ -34,7 +34,7 @@ target("compiler")
     add_files("src/*.cpp")
     -- add_includedirs("include")
     
-    add_deps("riscv64", "midend")
+    add_deps("riscv64", "midend", "frontend")
     add_rpathdirs("@loader_path", "@loader_path/lib")
 
 if os.isdir(path.join(os.scriptdir(), "tests")) then
@@ -74,35 +74,6 @@ task("update-submodules")
         description = "Update all submodules to their latest commits"
     }
 
-task("test")
-    on_run(function()
-        import("core.base.task")
-        task.run("build", {targets = {"compiler_tests"}})
-        os.exec("xmake run compiler_tests")
-    end)
-    
-    set_menu {
-        usage = "xmake test",
-        description = "Run all tests"
-    }
-
-task("test-all")
-    on_run(function()
-        import("core.base.task")
-        cprint("${color.info}Running compiler tests...")
-        task.run("build", {targets = {"compiler_tests"}})
-        os.exec("xmake run compiler_tests")
-        
-        cprint("${color.info}Running midend tests...")
-        task.run("build", {targets = {"midend_tests"}})
-        os.exec("xmake run midend_tests")
-    end)
-    
-    set_menu {
-        usage = "xmake test-all",
-        description = "Run all tests including submodule tests"
-    }
-
 
 task("format")
     set_menu {
@@ -137,4 +108,70 @@ task("format")
         else
             cprint("${green}All files are properly formatted!")
         end
+    end)
+
+task("test")
+    set_menu {
+        usage = "xmake test",
+        description = "Run tests",
+        options = {
+            {'t', "target", "v", nil, "测试目标（.sy 文件或测试用例目录）"},
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"}
+        }
+    }
+    on_run(function ()
+        import("core.project.project")
+        import("core.base.task")
+        import("lib.detect.find_tool")
+        import("core.base.option")
+        import("devel.git")
+        local python3 = find_tool("python3")
+        if not python3 then
+            raise("Python3 is required to run tests")
+        end
+        task.run("build", {target = "compiler"})
+        local target = project.target("compiler")
+        local target_executable = path.absolute(target:targetfile())
+        local test_script_dir = path.join(target:targetdir(), "test_script")
+        if not os.isdir(test_script_dir) then
+            cprint("${blue}test_script not found, cloning from repository...")
+            git.clone("https://github.com/BUPT-a-out/test-script.git", {outputdir = test_script_dir, branch = "master"})
+        end
+        local test_script = path.join(test_script_dir, "test.py")
+        local test_target = option.get("target")
+        if test_target == nil then
+            raise("Please specify a test target")
+        end
+        local level = option.get("optimization") or "0"
+        local command = python3.program .. " " .. test_script .. " run " .. test_target .. " -- " .. target_executable .. " -S -O" .. level
+        print("Running test command: " .. command)
+        os.exec(command)
+    end)
+
+task("debug")
+    set_menu {
+        usage = "xmake debug",
+        description = "Debug on a file",
+        options = {
+            {'t', "target", "v", nil, "测试目标（.sy 文件）"},
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"}
+        }
+    }
+    on_run(function ()
+        import("core.project.project")
+        import("core.base.task")
+        import("lib.detect.find_tool")
+        import("core.base.option")
+        import("devel.git")
+        task.run("build", {target = "compiler"})
+        local target = project.target("compiler")
+        local target_executable = path.absolute(target:targetfile())
+        local test_target = option.get("target")
+        if test_target == nil then
+            raise("Please specify a test target")
+        end
+        local level = option.get("optimization") or "0"
+        local command = target_executable .. " " .. test_target .. " -S -O" .. level
+        print("Running test command: " .. command)
+        os.exec(command, {stdin=stdin})
     end)
