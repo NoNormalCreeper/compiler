@@ -147,3 +147,31 @@ task("test")
         print("Running test command: " .. command)
         os.exec(command)
     end)
+
+task("debug")
+    set_menu {
+        usage = "xmake debug",
+        description = "Debug on a file",
+        options = {
+            {'t', "target", "v", nil, "测试目标（.sy 文件）"},
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"}
+        }
+    }
+    on_run(function ()
+        import("core.project.project")
+        import("core.base.task")
+        import("lib.detect.find_tool")
+        import("core.base.option")
+        import("devel.git")
+        task.run("build", {target = "compiler"})
+        local target = project.target("compiler")
+        local target_executable = path.absolute(target:targetfile())
+        local test_target = option.get("target")
+        if test_target == nil then
+            raise("Please specify a test target")
+        end
+        local level = option.get("optimization") or "0"
+        local command = target_executable .. " " .. test_target .. " -S -O" .. level
+        print("Running test command: " .. command)
+        os.exec(command, {stdin=stdin})
+    end)

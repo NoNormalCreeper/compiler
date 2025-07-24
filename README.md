@@ -6,6 +6,7 @@
 ```
 compiler/
 ├── modules/
+│   ├── frontend/          # Sysy Frontend (submodule) 
 │   ├── riscv64/           # RISC-V backend (submodule)
 │   └── midend/            # Middle-end IR library (submodule)
 └── src/
@@ -33,14 +34,16 @@ compiler/
 xmake
 ```
 
-### Running
+### Testing
 
 ```bash
-xmake run
+xmake test <sy_file|test_case_directory>
 ```
 
-This will execute the example in `main.cpp` which demonstrates:
-- Creating an IR module
-- Building a function that sums an array
-- Generating and printing the IR
+Compile and run [test-script](https://github.com/BUPT-a-out/test-script). To update test-script, delete the `build` directory and run `xmake test` again.
 
+### Debugging
+
+```bash
+xmake debug <sy_file>
+```
