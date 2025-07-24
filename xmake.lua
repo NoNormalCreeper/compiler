@@ -34,7 +34,7 @@ target("compiler")
     add_files("src/*.cpp")
     -- add_includedirs("include")
     
-    add_deps("riscv64", "midend")
+    add_deps("riscv64", "midend", "frontend")
     add_rpathdirs("@loader_path", "@loader_path/lib")
 
 if os.isdir(path.join(os.scriptdir(), "tests")) then
