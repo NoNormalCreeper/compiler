@@ -23,12 +23,13 @@ jobs:
           COMMIT_MESSAGE=$(git show -s --format='%s' HEAD)
           COMMIT_SHA=$(git rev-parse HEAD)
           REPO_URL="https://github.com/${{ github.repository }}/commit/$COMMIT_SHA"
-          FULL_MSG="${COMMIT_MSG}"$'\n\n'"[Original commit]($REPO_URL)"
 
           echo "author_name=$COMMIT_AUTHOR_NAME" >> "$GITHUB_OUTPUT"
           echo "author_email=$COMMIT_AUTHOR_EMAIL" >> "$GITHUB_OUTPUT"
           echo "commit_message<<_COMMIT_EOF" >> "$GITHUB_OUTPUT"
-          echo "$FULL_MSG" >> "$GITHUB_OUTPUT"
+          echo "$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+          echo >> "$GITHUB_OUTPUT"
+          echo "Original commit: $REPO_URL" >> "$GITHUB_OUTPUT"
           echo "_COMMIT_EOF" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v3
