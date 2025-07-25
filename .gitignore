@@ -3,6 +3,7 @@ build/
 !.gitignore
 !.gitmodules
 !.vscode/
+!.github
 compile_commands.json
 .xmake/
 /*.sy

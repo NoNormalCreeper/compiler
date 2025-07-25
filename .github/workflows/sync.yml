@@ -1,0 +1,73 @@
+name: Sync
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          path: compiler
+
+      - name: Get latest commit metadata
+        id: commit
+        run: |
+          cd compiler
+          COMMIT_AUTHOR_NAME=$(git show -s --format='%an' HEAD)
+          COMMIT_AUTHOR_EMAIL=$(git show -s --format='%ae' HEAD)
+          COMMIT_MESSAGE=$(git show -s --format='%s' HEAD)
+          COMMIT_SHA=$(git rev-parse HEAD)
+          REPO_URL="https://github.com/${{ github.repository }}/commit/$COMMIT_SHA"
+          FULL_MSG="${COMMIT_MSG}"$'\n\n'"[Original commit]($REPO_URL)"
+
+          echo "author_name=$COMMIT_AUTHOR_NAME" >> "$GITHUB_OUTPUT"
+          echo "author_email=$COMMIT_AUTHOR_EMAIL" >> "$GITHUB_OUTPUT"
+          echo "commit_message<<_COMMIT_EOF" >> "$GITHUB_OUTPUT"
+          echo "$FULL_MSG" >> "$GITHUB_OUTPUT"
+          echo "_COMMIT_EOF" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v3
+        with:
+          repository: BUPT-a-out/a.out
+          path: a.out
+          token: ${{ secrets.A_OUT_TOKEN }}
+          submodules: recursive
+
+      - name: Install xmake
+        run: |
+          curl -fsSL https://xmake.io/shget.text | bash
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Generate Code
+        run: |
+          cd compiler
+          xmake config --toolchain=clang --mode=debug --yes
+          xmake build frontend
+
+      - name: Copy code
+        run: |
+          rm -rf a.out/src/
+          rm -rf a.out/include/
+          mkdir -p a.out/src/
+          mkdir -p a.out/include/
+          cp -r compiler/src/* a.out/src/
+          modules=(frontend midend riscv64)
+          for module in "${modules[@]}"; do
+            cp -r "compiler/modules/$module/include/"* "a.out/include/"
+            cp -r "compiler/modules/$module/src/"* "a.out/src/"
+          done
+
+      - name: Commit changes
+        run: |
+          cd a.out
+          git config user.name "${{ steps.commit.outputs.author_name }}"
+          git config user.email "${{ steps.commit.outputs.author_email }}"
+
+          git add .
+          git commit -m "${{ steps.commit.outputs.commit_message }}" || echo "Nothing to commit"
+          git push origin main
