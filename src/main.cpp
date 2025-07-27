@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 
+#include "IR/IRPrinter.h"
 #include "Pass/Analysis/CallGraph.h"
 #include "Pass/Pass.h"
 #include "Pass/Transform/ADCEPass.h"
@@ -143,6 +144,9 @@ int main(int argc, char* argv[]) {
 
         passBuilder.parsePassPipeline(passManager, pipeline);
         passManager.run(*module.get());
+
+        std::cout << "Optimization results:\n";
+        std::cout << midend::IRPrinter::toString(module.get()) << std::endl;
     }
 
     auto assembly = riscv64::RISCV64Target().compileToAssembly(*module.get());
