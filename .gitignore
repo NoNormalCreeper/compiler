@@ -3,9 +3,8 @@ build/
 !.gitignore
 !.gitmodules
 !.vscode/
+!.github
 compile_commands.json
 .xmake/
-.vscode/launch.json
-.vscode/tasks.json
 /*.sy
 functional_recover/

@@ -116,7 +116,8 @@ task("test")
         description = "Run tests",
         options = {
             {'t', "target", "v", nil, "测试目标（.sy 文件或测试用例目录）"},
-            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"}
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
+            {'p', "pipeline", "kv", nil, "优化 Pipeline"}
         }
     }
     on_run(function ()
@@ -143,7 +144,13 @@ task("test")
             raise("Please specify a test target")
         end
         local level = option.get("optimization") or "0"
-        local command = python3.program .. " " .. test_script .. " run " .. test_target .. " -- " .. target_executable .. " -S -O" .. level
+        local pipeline = option.get("pipeline")
+        if pipeline ~= nil then
+            pipeline = " -p " .. pipeline
+        else
+            pipeline = ""
+        end
+        local command = python3.program .. " " .. test_script .. " run " .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command)
     end)
@@ -154,7 +161,8 @@ task("debug")
         description = "Debug on a file",
         options = {
             {'t', "target", "v", nil, "测试目标（.sy 文件）"},
-            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"}
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
+            {'p', "pipeline", "kv", nil, "优化 Pipeline"}
         }
     }
     on_run(function ()
@@ -171,7 +179,13 @@ task("debug")
             raise("Please specify a test target")
         end
         local level = option.get("optimization") or "0"
-        local command = target_executable .. " " .. test_target .. " -S -O" .. level
+        local pipeline = option.get("pipeline")
+        if pipeline ~= nil then
+            pipeline = " -p " .. pipeline
+        else
+            pipeline = ""
+        end
+        local command = target_executable .. " " .. test_target .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
