@@ -162,6 +162,7 @@ task("debug")
         options = {
             {'t', "target", "v", nil, "测试目标（.sy 文件）"},
             {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
+            {'s', "save", "kv", nil, "保存汇编结果到指定文件"},
             {'p', "pipeline", "kv", nil, "优化 Pipeline"}
         }
     }
@@ -185,7 +186,13 @@ task("debug")
         else
             pipeline = ""
         end
-        local command = target_executable .. " " .. test_target .. " -S -O" .. level .. pipeline
+        local save_file = option.get("save")
+        if save_file then
+            save_file = " -o " .. save_file
+        else
+            save_file = ""
+        end
+        local command = target_executable .. " " .. test_target .. " -S -O" .. level .. pipeline .. save_file
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
