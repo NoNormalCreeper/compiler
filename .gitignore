@@ -8,3 +8,9 @@ compile_commands.json
 .xmake/
 /*.sy
 functional_recover/
+.gdb_history
+/*.c
+/*.in
+/*.out
+/*.py
+/perf/
