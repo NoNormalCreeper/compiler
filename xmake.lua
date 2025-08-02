@@ -158,12 +158,59 @@ task("test")
 task("debug")
     set_menu {
         usage = "xmake debug",
-        description = "Debug on a file",
+        description = "Debug a test target",
+        options = {
+            {'t', "target", "v", nil, "测试目标（.sy 文件或测试用例目录）"},
+            {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
+            {'p', "pipeline", "kv", nil, "优化 Pipeline"}
+        }
+    }
+    on_run(function ()
+        import("core.project.project")
+        import("core.base.task")
+        import("lib.detect.find_tool")
+        import("core.base.option")
+        import("devel.git")
+        local python3 = find_tool("python3")
+        if not python3 then
+            raise("Python3 is required to run tests")
+        end
+        task.run("build", {target = "compiler"})
+        local target = project.target("compiler")
+        local target_executable = path.absolute(target:targetfile())
+        local test_script_dir = path.join(target:targetdir(), "test_script")
+        if not os.isdir(test_script_dir) then
+            cprint("${blue}test_script not found, cloning from repository...")
+            git.clone("https://github.com/BUPT-a-out/test-script.git", {outputdir = test_script_dir, branch = "master"})
+        end
+        local test_script = path.join(test_script_dir, "test.py")
+        local test_target = option.get("target")
+        if test_target == nil then
+            raise("Please specify a test target")
+        end
+        local level = option.get("optimization") or "0"
+        local pipeline = option.get("pipeline")
+        if pipeline ~= nil then
+            pipeline = " -p " .. pipeline
+        else
+            pipeline = ""
+        end
+        local command = python3.program .. " " .. test_script .. " debug " .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
+        print("Running test command: " .. command)
+        os.exec(command)
+    end)
+
+
+task("gen")
+    set_menu {
+        usage = "xmake gen",
+        description = "Generate assembly code for a test target",
         options = {
             {'t', "target", "v", nil, "测试目标（.sy 文件）"},
             {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
             {'s', "save", "kv", nil, "保存汇编结果到指定文件"},
-            {'p', "pipeline", "kv", nil, "优化 Pipeline"}
+            {'p', "pipeline", "kv", nil, "优化 Pipeline"},
+            {'i', "ir", "k", nil, "生成 IR 输出"}
         }
     }
     on_run(function ()
@@ -192,7 +239,12 @@ task("debug")
         else
             save_file = ""
         end
-        local command = target_executable .. " " .. test_target .. " -S -O" .. level .. pipeline .. save_file
+        local output = " -S "
+        if option.get("ir") then
+            output = " --emit-ir "
+        end
+
+        local command = target_executable .. " " .. test_target .. output .. "-O" .. level .. pipeline .. save_file
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
