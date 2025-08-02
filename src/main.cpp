@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
             pipeline = *custom_pipeline;
         } else {
             pipeline =
-                "mem2reg,tailrec,adce,simplifycfg,inline,"
+                "mem2reg,tailrec,adce,simplifycfg,gvn,inline,"
                 "instcombine,strengthreduce,adce,simplifycfg";
         }
 
