@@ -24,7 +24,8 @@ void print_help() {
     std::cout << "Usage: a.out [options] <input_file>\n"
               << "Options:\n"
               << "  -o <output>    Specify output file\n"
-              << "  -S             Generate assembly output (required)\n"
+              << "  -S             Generate assembly output\n"
+              << "  -emit-ir       Generate IR output\n"
               << "  -O0            No optimization (default)\n"
               << "  -O1            Enable optimization\n"
               << "  -p <pipeline>  Custom optimization pipeline\n"
@@ -47,14 +48,16 @@ int main(int argc, char* argv[]) {
     std::optional<std::string> output_file;
     std::optional<std::string> custom_pipeline;
     bool assembly_output = false;
+    bool emit_ir = false;
     int optimize_level = 0;
 
     static struct option long_options[] = {{"help", no_argument, 0, 'h'},
+                                           {"emit-ir", no_argument, 0, 'e'},
                                            {0, 0, 0, 0}};
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "o:SO:p:h", long_options, nullptr)) !=
-           -1) {
+    while ((opt = getopt_long(argc, argv, "o:SO:p:he", long_options,
+                              nullptr)) != -1) {
         switch (opt) {
             case 'o':
                 output_file = std::string{optarg};
@@ -86,6 +89,9 @@ int main(int argc, char* argv[]) {
             case 'p':
                 custom_pipeline = std::string{optarg};
                 break;
+            case 'e':
+                emit_ir = true;
+                break;
             default:
                 std::cerr << "Try 'a.out --help' for more information.\n";
                 return 1;
@@ -102,8 +108,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (!assembly_output) {
-        std::cerr << "Error: Only assembly output is supported. Use -S flag.\n";
+    if (assembly_output && emit_ir) {
+        std::cerr << "Error: Cannot use both -S and -emit-ir flags together.\n";
+        return 1;
+    }
+
+    if (!assembly_output && !emit_ir) {
+        std::cerr << "Error: Must specify either -S (assembly) or -emit-ir (IR "
+                     "output).\n";
         return 1;
     }
 
@@ -145,22 +157,40 @@ int main(int argc, char* argv[]) {
         passBuilder.parsePassPipeline(passManager, pipeline);
         passManager.run(*module.get());
 
-        std::cout << "Optimization results:\n";
-        std::cout << midend::IRPrinter::toString(module.get()) << std::endl;
+        if (!emit_ir) {
+            std::cout << "Optimization results:\n";
+            std::cout << midend::IRPrinter::toString(module.get()) << std::endl;
+        }
     }
 
-    auto assembly = riscv64::RISCV64Target().compileToAssembly(*module.get());
-
-    if (output_file.has_value()) {
-        std::ofstream out{*output_file};
-        if (!out) {
-            std::cerr << "Error: Cannot open output file: " << *output_file
-                      << std::endl;
-            return 1;
+    if (emit_ir) {
+        std::string ir_output = midend::IRPrinter::toString(module.get());
+        if (output_file.has_value()) {
+            std::ofstream out{*output_file};
+            if (!out) {
+                std::cerr << "Error: Cannot open output file: " << *output_file
+                          << std::endl;
+                return 1;
+            }
+            out << ir_output << std::endl;
+        } else {
+            std::cout << ir_output << std::endl;
         }
-        out << assembly << std::endl;
     } else {
-        std::cout << assembly << std::endl;
+        auto assembly =
+            riscv64::RISCV64Target().compileToAssembly(*module.get());
+
+        if (output_file.has_value()) {
+            std::ofstream out{*output_file};
+            if (!out) {
+                std::cerr << "Error: Cannot open output file: " << *output_file
+                          << std::endl;
+                return 1;
+            }
+            out << assembly << std::endl;
+        } else {
+            std::cout << assembly << std::endl;
+        }
     }
 
     return 0;
