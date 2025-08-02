@@ -248,3 +248,37 @@ task("gen")
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
+
+task("clang")
+    set_menu {
+        usage = "xmake clang",
+        description = "Run test with clang",
+        options = {
+            {'t', "target", "v", nil, "测试目标（.sy 文件或测试用例目录）"}
+        }
+    }
+    on_run(function ()
+        import("core.project.project")
+        import("core.base.task")
+        import("lib.detect.find_tool")
+        import("core.base.option")
+        import("devel.git")
+        local python3 = find_tool("python3")
+        if not python3 then
+            raise("Python3 is required to run tests")
+        end
+        local target = project.target("compiler")
+        local test_script_dir = path.join(target:targetdir(), "test_script")
+        if not os.isdir(test_script_dir) then
+            cprint("${blue}test_script not found, cloning from repository...")
+            git.clone("https://github.com/BUPT-a-out/test-script.git", {outputdir = test_script_dir, branch = "master"})
+        end
+        local test_script = path.join(test_script_dir, "test.py")
+        local test_target = option.get("target")
+        if test_target == nil then
+            raise("Please specify a test target")
+        end
+        local command = python3.program .. " " .. test_script .. " clang " .. test_target
+        print("Running test command: " .. command)
+        os.exec(command)
+    end)

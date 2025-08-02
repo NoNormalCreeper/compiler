@@ -11,6 +11,7 @@
 #include "Pass/Analysis/CallGraph.h"
 #include "Pass/Pass.h"
 #include "Pass/Transform/ADCEPass.h"
+#include "Pass/Transform/GVNPass.h"
 #include "Pass/Transform/InlinePass.h"
 #include "Pass/Transform/InstCombinePass.h"
 #include "Pass/Transform/Mem2RegPass.h"
@@ -132,6 +133,7 @@ int main(int argc, char* argv[]) {
         am.registerAnalysisType<midend::DominanceAnalysis>();
         am.registerAnalysisType<midend::PostDominanceAnalysis>();
         am.registerAnalysisType<midend::CallGraphAnalysis>();
+        am.registerAnalysisType<midend::AliasAnalysis>();
         midend::PassBuilder passBuilder;
         midend::InlinePass::setInlineThreshold(1000);
         midend::InlinePass::setMaxSizeGrowthThreshold(1000);
@@ -140,6 +142,7 @@ int main(int argc, char* argv[]) {
         passBuilder.registerPass<midend::ADCEPass>("adce");
         passBuilder.registerPass<midend::InstCombinePass>("instcombine");
         passBuilder.registerPass<midend::SimplifyCFGPass>("simplifycfg");
+        passBuilder.registerPass<midend::GVNPass>("gvn");
         passBuilder.registerPass<midend::TailRecursionOptimizationPass>(
             "tailrec");
         passBuilder.registerPass<midend::StrengthReductionPass>(
