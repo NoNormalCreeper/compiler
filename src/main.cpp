@@ -127,13 +127,19 @@ int main(int argc, char* argv[]) {
     }
     auto module = generate_IR(file_in);
     fclose(file_in);
+    
+    // Declare passManager and analysisManager with extended lifetime
+    std::unique_ptr<midend::PassManager> passManager;
+    midend::AnalysisManager* analysisManager = nullptr;
+    
     if (optimize_level > 0 || custom_pipeline.has_value()) {
-        midend::PassManager passManager;
-        auto& am = passManager.getAnalysisManager();
-        am.registerAnalysisType<midend::DominanceAnalysis>();
-        am.registerAnalysisType<midend::PostDominanceAnalysis>();
-        am.registerAnalysisType<midend::CallGraphAnalysis>();
-        am.registerAnalysisType<midend::AliasAnalysis>();
+        passManager = std::make_unique<midend::PassManager>();
+        auto& am = passManager->getAnalysisManager();
+        analysisManager = &am;
+        analysisManager->registerAnalysisType<midend::DominanceAnalysis>();
+        analysisManager->registerAnalysisType<midend::PostDominanceAnalysis>();
+        analysisManager->registerAnalysisType<midend::CallGraphAnalysis>();
+        analysisManager->registerAnalysisType<midend::AliasAnalysis>();
         midend::PassBuilder passBuilder;
         midend::InlinePass::setInlineThreshold(1000);
         midend::InlinePass::setMaxSizeGrowthThreshold(1000);
@@ -157,8 +163,8 @@ int main(int argc, char* argv[]) {
                 "instcombine,strengthreduce,adce,simplifycfg";
         }
 
-        passBuilder.parsePassPipeline(passManager, pipeline);
-        passManager.run(*module.get());
+        passBuilder.parsePassPipeline(*passManager, pipeline);
+        passManager->run(*module);
 
         if (!emit_ir) {
             std::cout << "Optimization results:\n";
@@ -180,8 +186,8 @@ int main(int argc, char* argv[]) {
             std::cout << ir_output << std::endl;
         }
     } else {
-        auto assembly =
-            riscv64::RISCV64Target().compileToAssembly(*module.get());
+        auto assembly = riscv64::RISCV64Target().compileToAssembly(
+            *module, analysisManager);
 
         if (output_file.has_value()) {
             std::ofstream out{*output_file};
