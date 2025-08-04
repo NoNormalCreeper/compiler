@@ -14,6 +14,7 @@
 #include "Pass/Transform/GVNPass.h"
 #include "Pass/Transform/InlinePass.h"
 #include "Pass/Transform/InstCombinePass.h"
+#include "Pass/Transform/LICMPass.h"
 #include "Pass/Transform/Mem2RegPass.h"
 #include "Pass/Transform/SimplifyCFGPass.h"
 #include "Pass/Transform/StrengthReductionPass.h"
@@ -127,11 +128,11 @@ int main(int argc, char* argv[]) {
     }
     auto module = generate_IR(file_in);
     fclose(file_in);
-    
+
     // Declare passManager and analysisManager with extended lifetime
     std::unique_ptr<midend::PassManager> passManager;
     midend::AnalysisManager* analysisManager = nullptr;
-    
+
     if (optimize_level > 0 || custom_pipeline.has_value()) {
         passManager = std::make_unique<midend::PassManager>();
         auto& am = passManager->getAnalysisManager();
@@ -140,6 +141,7 @@ int main(int argc, char* argv[]) {
         analysisManager->registerAnalysisType<midend::PostDominanceAnalysis>();
         analysisManager->registerAnalysisType<midend::CallGraphAnalysis>();
         analysisManager->registerAnalysisType<midend::AliasAnalysis>();
+        analysisManager->registerAnalysisType<midend::LoopAnalysis>();
         midend::PassBuilder passBuilder;
         midend::InlinePass::setInlineThreshold(1000);
         midend::InlinePass::setMaxSizeGrowthThreshold(1000);
@@ -149,6 +151,7 @@ int main(int argc, char* argv[]) {
         passBuilder.registerPass<midend::InstCombinePass>("instcombine");
         passBuilder.registerPass<midend::SimplifyCFGPass>("simplifycfg");
         passBuilder.registerPass<midend::GVNPass>("gvn");
+        passBuilder.registerPass<midend::LICMPass>("licm");
         passBuilder.registerPass<midend::TailRecursionOptimizationPass>(
             "tailrec");
         passBuilder.registerPass<midend::StrengthReductionPass>(
@@ -159,8 +162,8 @@ int main(int argc, char* argv[]) {
             pipeline = *custom_pipeline;
         } else {
             pipeline =
-                "mem2reg,tailrec,adce,simplifycfg,gvn,inline,"
-                "instcombine,strengthreduce,adce,simplifycfg";
+                "mem2reg,tailrec,adce,simplifycfg,gvn,"
+                "inline,licm,gvn,instcombine,strengthreduce,adce,simplifycfg";
         }
 
         passBuilder.parsePassPipeline(*passManager, pipeline);
