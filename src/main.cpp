@@ -161,12 +161,29 @@ int main(int argc, char* argv[]) {
         if (custom_pipeline.has_value()) {
             pipeline = *custom_pipeline;
         } else {
-            pipeline =
-                "mem2reg,tailrec,adce,simplifycfg,gvn,"
-                "inline,licm,gvn,instcombine,strengthreduce,adce,simplifycfg";
+            pipeline = R"(
+                mem2reg,tailrec,adce,simplifycfg
+                (gvn,inline,licm,gvn)*5
+                instcombine,strengthreduce
+                mem2reg,adce,simplifycfg
+            )";
         }
 
-        passBuilder.parsePassPipeline(*passManager, pipeline);
+        auto parseResult =
+            passBuilder.parsePassPipeline(*passManager, pipeline);
+        if (!parseResult.success) {
+            std::cerr << "Error: Failed to parse optimization pipeline\n";
+            std::cerr << "  " << parseResult.errorMessage << "\n";
+
+            if (parseResult.errorPosition < pipeline.length()) {
+                std::cerr << "  Pipeline: " << pipeline << "\n";
+                std::cerr << "  "
+                          << std::string(parseResult.errorPosition + 10, ' ')
+                          << "^\n";
+            }
+            return 1;
+        }
+
         passManager->run(*module);
 
         if (!emit_ir) {
