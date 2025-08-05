@@ -117,7 +117,8 @@ task("test")
         options = {
             {'t', "target", "v", nil, "测试目标（.sy 文件或测试用例目录）"},
             {'o', "optimization", "kv", "0", "优化级别（0 或 1）"},
-            {'p', "pipeline", "kv", nil, "优化 Pipeline"}
+            {'p', "pipeline", "kv", nil, "优化 Pipeline"},
+            {'s', "hidden", "k", nil, "关闭标准输出"}
         }
     }
     on_run(function ()
@@ -150,7 +151,13 @@ task("test")
         else
             pipeline = ""
         end
-        local command = python3.program .. " " .. test_script .. " run " .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
+        local hidden = option.get("hidden")
+        if hidden then
+            hidden = " --no-stdout "
+        else
+            hidden = ""
+        end
+        local command = python3.program .. " " .. test_script .. " run " .. hidden .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command)
     end)
