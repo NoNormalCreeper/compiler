@@ -157,7 +157,7 @@ task("test")
         else
             hidden = ""
         end
-        local command = python3.program .. " " .. test_script .. " run " .. hidden .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
+        local command = python3.program .. " " .. test_script .. " run " .. hidden .. path.join(os.workingdir(), test_target) .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command)
     end)
@@ -202,7 +202,7 @@ task("debug")
         else
             pipeline = ""
         end
-        local command = python3.program .. " " .. test_script .. " debug " .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
+        local command = python3.program .. " " .. test_script .. " debug " .. path.join(os.workingdir(), test_target) .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command)
     end)
@@ -251,7 +251,7 @@ task("gen")
             output = " --emit-ir "
         end
 
-        local command = target_executable .. " " .. test_target .. output .. "-O" .. level .. pipeline .. save_file
+        local command = target_executable .. " " .. path.join(os.workingdir(), test_target) .. output .. "-O" .. level .. pipeline .. save_file
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
@@ -285,7 +285,7 @@ task("clang")
         if test_target == nil then
             raise("Please specify a test target")
         end
-        local command = python3.program .. " " .. test_script .. " clang " .. test_target
+        local command = python3.program .. " " .. path.join(os.workingdir(), test_target) .. " clang " .. test_target
         print("Running test command: " .. command)
         os.exec(command)
     end)
