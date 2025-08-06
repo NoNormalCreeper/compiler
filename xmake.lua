@@ -41,6 +41,14 @@ if os.isdir(path.join(os.scriptdir(), "tests")) then
     includes("tests/xmake.lua")
 end
 
+function resolve(path)
+    if path.is_absolute(path) then
+        return path
+    else
+        return path.join(os.workingdir(), path)
+    end
+end
+
 task("update-submodules")
     on_run(function()
         import("core.project.project")
@@ -157,7 +165,10 @@ task("test")
         else
             hidden = ""
         end
-        local command = python3.program .. " " .. test_script .. " run " .. hidden .. path.join(os.workingdir(), test_target) .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
+        if not path.is_absolute(test_target) then
+            test_target = path.join(os.workingdir(), test_target)
+        end
+        local command = python3.program .. " " .. test_script .. " run " .. hidden .. test_target .. " -- " .. target_executable .. " -S -O" .. level .. pipeline
         print("Running test command: " .. command)
         os.exec(command)
     end)
@@ -250,8 +261,11 @@ task("gen")
         if option.get("ir") then
             output = " --emit-ir "
         end
+        if not path.is_absolute(test_target) then
+            test_target = path.join(os.workingdir(), test_target)
+        end
 
-        local command = target_executable .. " " .. path.join(os.workingdir(), test_target) .. output .. "-O" .. level .. pipeline .. save_file
+        local command = target_executable .. " " .. test_target .. output .. "-O" .. level .. pipeline .. save_file
         print("Running test command: " .. command)
         os.exec(command, {stdin=stdin})
     end)
